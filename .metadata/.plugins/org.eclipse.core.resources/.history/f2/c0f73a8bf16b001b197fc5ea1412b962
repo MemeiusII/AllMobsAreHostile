@@ -1,0 +1,68 @@
+package me.EthanBilbrey.AllMobsAreHostile;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Husk;
+import org.bukkit.entity.Pig;
+
+public class NewPig 
+{
+	private Pig pig;
+	private Husk zombie;
+	private int taskId;
+	private int ticks;
+	
+	public NewPig(Location loc) 
+	{
+		spawnPig(loc);
+	}
+	
+	public void spawnPig(Location loc) 
+	{
+		this.pig = (Pig) loc.getWorld().spawnEntity(loc, EntityType.PIG);
+		this.zombie = (Husk) loc.getWorld().spawnEntity(loc, EntityType.HUSK);
+		this.zombie.setBaby();
+		this.zombie.setSilent(true);
+		this.zombie.setInvisible(true);
+		run();
+	}
+	public void run() 
+	{
+		ticks = 0;
+		taskId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(), () -> {
+			this.pig.setRotation(this.zombie.getLocation().getYaw(), this.zombie.getLocation().getPitch());
+			this.pig.setVelocity(this.zombie.getVelocity());
+			if(ticks % 10 == 0) 
+			{
+				this.pig.teleport(this.zombie);
+			}
+			if(this.pig.isDead()) 
+			{
+				try 
+				{
+					this.zombie.remove();
+				}catch(NullPointerException e) {}
+			}
+			else if(this.zombie.isDead()) 
+			{
+				try 
+				{
+					this.pig.remove();
+				}catch(NullPointerException e) {}
+			}
+			if(ticks >= 100) 
+			{
+				ticks = 0;
+			}
+			else 
+			{
+				ticks++;
+			}
+		}, 1L, 1L);
+	}
+	public void cancelTask(int taskId) 
+	{
+		Bukkit.getServer().getScheduler().cancelTask(taskId);
+	}
+}

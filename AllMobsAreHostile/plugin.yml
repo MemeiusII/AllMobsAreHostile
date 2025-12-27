@@ -1,0 +1,6 @@
+main: me.EthanBilbrey.AllMobsAreHostile.Main
+name: AllMobsAreHostile
+api-version: 1.16
+version: 1.0
+author: Ethan Bilbrey and Christopher Lutz
+description: Makes all mobs hostile

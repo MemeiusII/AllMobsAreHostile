@@ -1,0 +1,107 @@
+package me.EthanBilbrey.AllMobsAreHostile;
+
+import java.util.List;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Husk;
+import org.bukkit.entity.Pig;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
+
+public class NewPig implements Listener
+{
+	private Pig pig;
+	private Husk zombie;
+	private int taskId;
+	private int ticks;
+	
+	public NewPig(Location loc) 
+	{
+		spawnPig(loc);
+	}
+	
+	public void spawnPig(Location loc) 
+	{
+		this.pig = (Pig) loc.getWorld().spawnEntity(loc, EntityType.PIG);
+		this.zombie = (Husk) loc.getWorld().spawnEntity(loc, EntityType.HUSK);
+		this.zombie.setBaby();
+		this.zombie.setSilent(true);
+		this.zombie.setInvisible(true);
+		run();
+	}
+	public void run() 
+	{
+		ticks = 0;
+		taskId = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(), () -> {
+			this.pig.setRotation(this.zombie.getLocation().getYaw(), this.zombie.getLocation().getPitch());
+			this.pig.setVelocity(this.zombie.getVelocity());
+			if(ticks % 10 == 0) 
+			{
+				this.pig.teleport(this.zombie);
+			}
+			if(this.pig.isDead()) 
+			{
+				try 
+				{
+					this.zombie.remove();
+				}catch(NullPointerException e) {}
+			}
+			else if(this.zombie.isDead()) 
+			{
+				try 
+				{
+					this.pig.remove();
+				}catch(NullPointerException e) {}
+			}
+			if(ticks >= 100) 
+			{
+				ticks = 0;
+				List<Entity> entites = this.pig.getNearbyEntities(50, 50, 50);
+				boolean playerNearby = true;
+				for(Entity entity : entites) 
+				{
+					if(entity instanceof Player) 
+					{
+						playerNearby = true;
+					}
+					if(!playerNearby) 
+					{
+						cancelTask(taskId);
+						try 
+						{
+							this.pig.remove();
+							this.zombie.remove();
+						}catch(NullPointerException exc) {}
+					}
+				}
+			}
+			else 
+			{
+				ticks++;
+			}
+		}, 1L, 1L);
+	}
+	@EventHandler
+	public void onDeath(EntityDeathEvent e) 
+	{
+		if(e.getEntity().equals(this.pig)) 
+		{
+			cancelTask(taskId);
+			this.pig.remove();
+		}
+		else if(e.getEntity().equals(this.zombie)) 
+		{
+			cancelTask(taskId);
+			this.zombie.remove();
+		}
+	}
+	public void cancelTask(int taskId) 
+	{
+		Bukkit.getServer().getScheduler().cancelTask(taskId);
+	}
+}

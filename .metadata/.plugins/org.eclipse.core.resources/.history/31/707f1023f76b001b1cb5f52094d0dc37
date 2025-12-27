@@ -1,0 +1,25 @@
+package me.EthanBilbrey.AllMobsAreHostile;
+
+import org.bukkit.entity.EnderDragon;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntitySpawnEvent;
+
+
+public class MobSpawn implements Listener
+{
+	@EventHandler
+	public void onSneak(EntitySpawnEvent e) 
+	{
+		Entity entity = e.getEntity();
+		
+		if(entity instanceof LivingEntity && !(entity instanceof Monster) && !(entity instanceof EnderDragon)) 
+		{
+			e.getEntity().remove();
+			NewPig ent = new NewPig(entity.getLocation(), entity);
+		}
+	}
+}
